@@ -86,4 +86,36 @@ class BracketTest {
         assertTrue(bracket.kept.isEmpty())
         assertNull(bracket.current)
     }
+
+    @Test
+    fun excludedPhotosNeverComeUp() {
+        val bracket = Bracket(listOf(1L, 2L, 3L, 4L), excluded = listOf(3L, 4L), random = Random(0))
+        repeat(20) {
+            assertEquals(setOf(1L, 2L), bracket.current!!.toList().toSet())
+            bracket.keepBoth()
+        }
+    }
+
+    @Test
+    fun excludedPhotosKeepTheirTrashAndQueue() {
+        val bracket = Bracket(
+            listOf(1L, 2L, 3L, 4L),
+            trashed = listOf(3L),
+            sortQueue = mapOf(4L to "cats"),
+            excluded = listOf(3L, 4L),
+        )
+        assertEquals(setOf(3L), bracket.trashed)
+        assertEquals(mapOf(4L to "cats"), bracket.sortQueue)
+    }
+
+    @Test
+    fun restoringAnExcludedPhotoDoesNotPutItInThePool() {
+        val bracket = Bracket(listOf(1L, 2L, 3L), trashed = listOf(3L), excluded = listOf(3L), random = Random(0))
+        bracket.restore(3L)
+        assertTrue(bracket.trashed.isEmpty())
+        repeat(20) {
+            assertEquals(setOf(1L, 2L), bracket.current!!.toList().toSet())
+            bracket.keepBoth()
+        }
+    }
 }

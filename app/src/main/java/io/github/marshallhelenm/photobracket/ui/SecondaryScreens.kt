@@ -38,6 +38,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.marshallhelenm.photobracket.LibraryFolder
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyColumn
+import io.github.marshallhelenm.photobracket.Folder
+import androidx.compose.foundation.clickable
 import java.util.Calendar
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
@@ -83,7 +89,7 @@ fun Logo(size: Dp, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SubScreen(
+internal fun SubScreen(
     title: String,
     onBack: () -> Unit,
     bottomBar: @Composable () -> Unit = {},
@@ -172,9 +178,13 @@ fun SettingsScreen(
     settings: Settings,
     keptCount: Int,
     notificationsAllowed: Boolean,
+    onManagePhotoFolders: () -> Unit,
     onIncludeKeptChange: (Boolean) -> Unit,
     onForgetKept: () -> Unit,
     onDeleteImmediatelyChange: (Boolean) -> Unit,
+    folders: List<Folder>,
+    onSortingEnabledChange: (Boolean) -> Unit,
+    onManageFolders: () -> Unit,
     onReminderEnabledChange: (Boolean) -> Unit,
     onReminderRandom: () -> Unit,
     onReminderTimeChange: (minuteOfDay: Int) -> Unit,
@@ -188,6 +198,21 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
         ) {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.photo_folders)) },
+                supportingContent = {
+                    val count = settings.excludedFolders.size
+                    Text(
+                        if (count == 0) {
+                            stringResource(R.string.setting_photo_folders_all)
+                        } else {
+                            pluralStringResource(R.plurals.setting_photo_folders_excluded, count, count)
+                        },
+                    )
+                },
+                modifier = Modifier.clickable(onClick = onManagePhotoFolders),
+            )
+            HorizontalDivider()
             SwitchSetting(
                 title = stringResource(R.string.setting_include_kept),
                 summary = stringResource(R.string.setting_include_kept_summary),
@@ -212,6 +237,28 @@ fun SettingsScreen(
                 checked = settings.deleteImmediately,
                 onCheckedChange = onDeleteImmediatelyChange,
             )
+            HorizontalDivider()
+            SwitchSetting(
+                title = stringResource(R.string.setting_sorting),
+                summary = stringResource(R.string.setting_sorting_summary),
+                checked = settings.sortingEnabled,
+                onCheckedChange = onSortingEnabledChange,
+            )
+            if (settings.sortingEnabled) {
+                val starred = folders.count { it.starred }
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.setting_manage_folders)) },
+                    supportingContent = {
+                        Text(pluralStringResource(R.plurals.setting_manage_folders_summary, folders.size, folders.size, starred))
+                    },
+                    leadingContent = {
+                        Text(folders.filter { it.starred }.joinToString("") { it.emoji }.ifEmpty { "📁" })
+                    },
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .clickable(onClick = onManageFolders),
+                )
+            }
             HorizontalDivider()
             SwitchSetting(
                 title = stringResource(R.string.setting_reminder),
@@ -334,6 +381,49 @@ fun AboutScreen(onBack: () -> Unit) {
             Text(stringResource(R.string.about_trash_title), style = MaterialTheme.typography.titleLarge)
             Text(stringResource(R.string.about_trash))
             Text(stringResource(R.string.about_trash_system))
+
+            Text(stringResource(R.string.about_folders_title), style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.about_folders))
+        }
+    }
+}
+
+@Composable
+fun PhotoFoldersScreen(
+    folders: List<LibraryFolder>,
+    excluded: Set<String>,
+    onExcludedChange: (relativePath: String, excluded: Boolean) -> Unit,
+    onBack: () -> Unit,
+) {
+    SubScreen(title = stringResource(R.string.photo_folders), onBack = onBack) { innerPadding ->
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            item {
+                Text(
+                    text = stringResource(R.string.photo_folders_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+            items(folders, key = { it.relativePath }) { folder ->
+                val included = folder.relativePath !in excluded
+                ListItem(
+                    headlineContent = {
+                        Text(folder.relativePath.trimEnd('/').ifEmpty { stringResource(R.string.photo_folders_root) })
+                    },
+                    supportingContent = {
+                        Text(pluralStringResource(R.plurals.photo_count, folder.photoCount, folder.photoCount))
+                    },
+                    trailingContent = {
+                        Switch(checked = included, onCheckedChange = { onExcludedChange(folder.relativePath, !it) })
+                    },
+                    modifier = Modifier.toggleable(
+                        value = included,
+                        role = Role.Switch,
+                        onValueChange = { onExcludedChange(folder.relativePath, !it) },
+                    ),
+                )
+            }
         }
     }
 }

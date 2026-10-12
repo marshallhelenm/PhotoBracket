@@ -31,6 +31,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Check
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import io.github.marshallhelenm.photobracket.PhotoRepository
@@ -63,6 +65,7 @@ private const val MAX_ZOOM = 5f
 fun PhotoViewer(
     photos: List<Uri>,
     initialPage: Int,
+    tagging: FolderTagging?,
     onKeep: (Uri) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -109,13 +112,15 @@ fun PhotoViewer(
                     Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.close), tint = Color.White)
                 }
                 Text(
-                    text = stringResource(R.string.photo_position, pagerState.currentPage + 1, photos.size),
+                    text = stringResource(R.string.photo_position, pagerState.currentPage + 1, photos.size) +
+                        tagging?.folderFor(photos[pagerState.currentPage])?.let { "  ·  ${it.emoji} ${it.name}" }.orEmpty(),
                     color = Color.White,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.align(Alignment.Center).padding(vertical = 12.dp),
                 )
                 PhotoMenu(
                     uri = photos[pagerState.currentPage],
+                    tagging = tagging,
                     modifier = Modifier.align(Alignment.TopEnd),
                 )
             }
@@ -189,10 +194,11 @@ private fun ZoomableImage(
 }
 
 @Composable
-private fun PhotoMenu(uri: Uri, modifier: Modifier = Modifier) {
+private fun PhotoMenu(uri: Uri, tagging: FolderTagging?, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var expanded by remember { mutableStateOf(false) }
+    var choosingFolder by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         IconButton(onClick = { expanded = true }) {
@@ -223,6 +229,42 @@ private fun PhotoMenu(uri: Uri, modifier: Modifier = Modifier) {
                     }
                 },
             )
+            if (tagging != null && tagging.folders.isNotEmpty()) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.sort_into)) },
+                    onClick = {
+                        expanded = false
+                        choosingFolder = true
+                    },
+                )
+            }
+        }
+        if (tagging != null) {
+            val current = tagging.folderFor(uri)
+            DropdownMenu(expanded = choosingFolder, onDismissRequest = { choosingFolder = false }) {
+                tagging.folders.forEach { folder ->
+                    DropdownMenuItem(
+                        leadingIcon = { Text(folder.emoji, fontSize = 20.sp) },
+                        text = { Text(folder.name) },
+                        trailingIcon = {
+                            if (folder.id == current?.id) Icon(Icons.Filled.Check, contentDescription = null)
+                        },
+                        onClick = {
+                            choosingFolder = false
+                            tagging.toggle(uri, folder)
+                        },
+                    )
+                }
+                if (current != null) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.dont_sort)) },
+                        onClick = {
+                            choosingFolder = false
+                            tagging.clear(uri)
+                        },
+                    )
+                }
+            }
         }
     }
 }

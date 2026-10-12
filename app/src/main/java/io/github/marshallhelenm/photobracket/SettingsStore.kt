@@ -14,6 +14,10 @@ data class Settings(
     val reminderRandom: Boolean = true,
     /** Time of the daily reminder, in minutes after midnight. */
     val reminderMinuteOfDay: Int = 19 * 60,
+    /** Whether photos can be tagged with folders to be moved into once kept. */
+    val sortingEnabled: Boolean = false,
+    /** Folders (relative paths like "DCIM/Screenshots/") whose photos never come up in matchups. */
+    val excludedFolders: Set<String> = emptySet(),
 )
 
 /** Settings persistence, shared by the UI and the background reminder job. */
@@ -29,6 +33,8 @@ class SettingsStore(context: Context) {
             reminderEnabled = prefs.getBoolean(KEY_REMINDER_ENABLED, defaults.reminderEnabled),
             reminderRandom = prefs.getBoolean(KEY_REMINDER_RANDOM, defaults.reminderRandom),
             reminderMinuteOfDay = prefs.getInt(KEY_REMINDER_MINUTE, defaults.reminderMinuteOfDay),
+            sortingEnabled = prefs.getBoolean(KEY_SORTING_ENABLED, defaults.sortingEnabled),
+            excludedFolders = prefs.getStringSet(KEY_EXCLUDED_FOLDERS, null)?.toSet() ?: defaults.excludedFolders,
         )
     }
 
@@ -39,6 +45,8 @@ class SettingsStore(context: Context) {
             putBoolean(KEY_REMINDER_ENABLED, settings.reminderEnabled)
             putBoolean(KEY_REMINDER_RANDOM, settings.reminderRandom)
             putInt(KEY_REMINDER_MINUTE, settings.reminderMinuteOfDay)
+            putBoolean(KEY_SORTING_ENABLED, settings.sortingEnabled)
+            putStringSet(KEY_EXCLUDED_FOLDERS, settings.excludedFolders)
         }
     }
 
@@ -58,6 +66,8 @@ class SettingsStore(context: Context) {
         const val KEY_REMINDER_ENABLED = "reminder_enabled"
         const val KEY_REMINDER_RANDOM = "reminder_random"
         const val KEY_REMINDER_MINUTE = "reminder_minute"
+        const val KEY_SORTING_ENABLED = "sorting_enabled"
+        const val KEY_EXCLUDED_FOLDERS = "excluded_folders"
         const val KEY_LAST_REMINDER_DAY = "reminder_last_day"
         const val KEY_ASKED_NOTIFICATIONS = "asked_notifications"
     }

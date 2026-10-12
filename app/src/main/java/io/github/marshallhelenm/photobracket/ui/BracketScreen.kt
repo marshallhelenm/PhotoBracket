@@ -43,12 +43,15 @@ import androidx.compose.ui.Modifier
 import io.github.marshallhelenm.photobracket.ui.theme.textButtonColors
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import io.github.marshallhelenm.photobracket.BracketUiState
+import io.github.marshallhelenm.photobracket.Folder
+import io.github.marshallhelenm.photobracket.SUGGESTED_FOLDERS
 import io.github.marshallhelenm.photobracket.R
 import io.github.marshallhelenm.photobracket.ui.theme.PhotoBracketTheme
 
@@ -59,10 +62,14 @@ fun BracketScreen(
     onKeep: (Uri) -> Unit,
     onKeepBoth: () -> Unit,
     onKeepNeither: () -> Unit,
+    onTag: (Uri, String?) -> Unit,
     onOpenTrash: () -> Unit,
+    onOpenSortQueue: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
 ) {
+    val tagging = if (state.settings.sortingEnabled) FolderTagging(state.folders, state.pairFolders, onTag) else null
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -74,18 +81,13 @@ fun BracketScreen(
                     }
                 },
                 actions = {
-                    // Badge wraps the button rather than the icon: IconButton clips its content,
-                    // which cut off the count. The offset pulls the badge back onto the icon.
-                    BadgedBox(badge = {
-                        if (state.trash.isNotEmpty()) {
-                            Badge(modifier = Modifier.offset(x = (-10).dp, y = 10.dp)) {
-                                Text(state.trash.size.toString())
-                            }
+                    if (state.settings.sortingEnabled) {
+                        CountedIconButton(count = state.sortQueue.size, onClick = onOpenSortQueue) {
+                            Icon(painterResource(R.drawable.ic_folder), contentDescription = stringResource(R.string.to_sort))
                         }
-                    }) {
-                        IconButton(onClick = onOpenTrash) {
-                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.trash))
-                        }
+                    }
+                    CountedIconButton(count = state.trash.size, onClick = onOpenTrash) {
+                        Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.trash))
                     }
                     IconButton(onClick = onOpenSettings) {
                         Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.settings))
@@ -124,6 +126,7 @@ fun BracketScreen(
                 else -> {
                     PhotoPair(
                         pair = pair,
+                        tagging = tagging,
                         onKeep = onKeep,
                         modifier = Modifier.weight(1f),
                     )
@@ -140,9 +143,26 @@ fun BracketScreen(
     }
 }
 
+/** An icon button with a count badge. */
+@Composable
+private fun CountedIconButton(count: Int, onClick: () -> Unit, icon: @Composable () -> Unit) {
+    // Badge wraps the button rather than the icon: IconButton clips its content,
+    // which cut off the count. The offset pulls the badge back onto the icon.
+    BadgedBox(badge = {
+        if (count > 0) {
+            Badge(modifier = Modifier.offset(x = (-10).dp, y = 10.dp)) {
+                Text(count.toString())
+            }
+        }
+    }) {
+        IconButton(onClick = onClick, content = icon)
+    }
+}
+
 @Composable
 private fun PhotoPair(
     pair: Pair<Uri, Uri>,
+    tagging: FolderTagging?,
     onKeep: (Uri) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -156,6 +176,7 @@ private fun PhotoPair(
                 PhotoOption(
                     uri = uri,
                     position = index + 1,
+                    tagging = tagging,
                     onView = { viewing = index },
                     onKeep = onKeep,
                     modifier = optionModifier,
@@ -177,6 +198,7 @@ private fun PhotoPair(
         PhotoViewer(
             photos = photos,
             initialPage = index,
+            tagging = tagging,
             onKeep = onKeep,
             onDismiss = { viewing = null },
         )
@@ -187,22 +209,33 @@ private fun PhotoPair(
 private fun PhotoOption(
     uri: Uri,
     position: Int,
+    tagging: FolderTagging?,
     onView: () -> Unit,
     onKeep: (Uri) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        AsyncImage(
-            model = uri,
-            contentDescription = stringResource(R.string.photo_description, position),
-            contentScale = ContentScale.Fit,
+        Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable(onClick = onView),
-        )
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+        ) {
+            AsyncImage(
+                model = uri,
+                contentDescription = stringResource(R.string.photo_description, position),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize().clickable(onClick = onView),
+            )
+            if (tagging != null && tagging.starred.isNotEmpty()) {
+                FolderColumn(
+                    uri = uri,
+                    tagging = tagging,
+                    modifier = Modifier.align(Alignment.CenterEnd).padding(6.dp),
+                )
+            }
+        }
         Spacer(Modifier.height(8.dp))
         Button(onClick = { onKeep(uri) }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.keep_this))
@@ -225,12 +258,19 @@ private fun BracketScreenPreview() {
             state = BracketUiState(
                 isLoading = false,
                 pair = Uri.parse("content://media/1") to Uri.parse("content://media/2"),
+                settings = io.github.marshallhelenm.photobracket.Settings(sortingEnabled = true),
+                folders = SUGGESTED_FOLDERS.mapIndexed { i, (name, emoji) ->
+                    Folder(i.toString(), name, emoji, starred = true)
+                },
+                pairFolders = mapOf(Uri.parse("content://media/1") to "0"),
                 trash = listOf(Uri.parse("content://media/3")),
             ),
             onKeep = {},
             onKeepBoth = {},
             onKeepNeither = {},
+            onTag = { _, _ -> },
             onOpenTrash = {},
+            onOpenSortQueue = {},
             onOpenSettings = {},
             onOpenAbout = {},
         )

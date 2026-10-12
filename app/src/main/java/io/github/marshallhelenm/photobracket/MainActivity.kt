@@ -33,6 +33,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.marshallhelenm.photobracket.ui.PhotoFoldersScreen
+import io.github.marshallhelenm.photobracket.ui.SortQueueScreen
+import io.github.marshallhelenm.photobracket.ui.FoldersScreen
+import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -61,7 +65,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Screen { Bracket, Trash, Settings, About }
+private enum class Screen { Bracket, Trash, SortQueue, Settings, Folders, PhotoFolders, About }
 
 private val mediaPermissions: Array<String> = when {
     Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> arrayOf(
@@ -108,6 +112,22 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
         }
     }
 
+    // Photos waiting on the system "allow PhotoBracket to modify" dialog before being moved.
+    var awaitingSort by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    val sortLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) viewModel.applySort(awaitingSort)
+        awaitingSort = emptyList()
+    }
+
+    fun requestSort(uris: List<Uri>) {
+        if (uris.isEmpty()) return
+        val request = MediaStore.createWriteRequest(context.contentResolver, uris)
+        awaitingSort = uris
+        sortLauncher.launch(IntentSenderRequest.Builder(request.intentSender).build())
+    }
+
     val deleteLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult(),
     ) { result ->
@@ -134,9 +154,21 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
         if (store.load().reminderEnabled && !store.askedForNotifications) requestNotificationsIfNeeded()
     }
     LaunchedEffect(viewModel) {
+        viewModel.sortResults.collect { result ->
+            val resources = context.resources
+            val message = buildList {
+                if (result.moved > 0) add(resources.getQuantityString(R.plurals.sorted_photos, result.moved, result.moved))
+                if (result.failed > 0) add(resources.getQuantityString(R.plurals.sort_failed, result.failed, result.failed))
+            }.joinToString(". ")
+            if (message.isNotEmpty()) Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+    LaunchedEffect(viewModel) {
         viewModel.deleteRequests.collect { requestDelete(it) }
     }
-    BackHandler(enabled = screen != Screen.Bracket) { screen = Screen.Bracket }
+    BackHandler(enabled = screen != Screen.Bracket) {
+        screen = if (screen == Screen.Folders || screen == Screen.PhotoFolders) Screen.Settings else Screen.Bracket
+    }
 
     val state = viewModel.uiState
     val goHome = { screen = Screen.Bracket }
@@ -147,9 +179,13 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
             settings = state.settings,
             keptCount = state.keptCount,
             notificationsAllowed = notificationsAllowed,
+            onManagePhotoFolders = { screen = Screen.PhotoFolders },
             onIncludeKeptChange = viewModel::setIncludeKept,
             onForgetKept = viewModel::forgetKept,
             onDeleteImmediatelyChange = viewModel::setDeleteImmediately,
+            folders = state.folders,
+            onSortingEnabledChange = viewModel::setSortingEnabled,
+            onManageFolders = { screen = Screen.Folders },
             onReminderEnabledChange = { enabled ->
                 viewModel.setReminderEnabled(enabled)
                 if (enabled) requestNotificationsIfNeeded()
@@ -158,7 +194,21 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
             onReminderTimeChange = viewModel::setReminderTime,
             onBack = goHome,
         )
+        screen == Screen.Folders -> FoldersScreen(
+            folders = state.folders,
+            onAdd = viewModel::addFolder,
+            onUpdate = viewModel::updateFolder,
+            onStarredChange = viewModel::setStarred,
+            onDelete = viewModel::deleteFolder,
+            onBack = { screen = Screen.Settings },
+        )
         screen == Screen.About -> AboutScreen(onBack = goHome)
+        screen == Screen.PhotoFolders && hasPermission -> PhotoFoldersScreen(
+            folders = state.libraryFolders,
+            excluded = state.settings.excludedFolders,
+            onExcludedChange = viewModel::setFolderExcluded,
+            onBack = { screen = Screen.Settings },
+        )
         !hasPermission -> PermissionPrompt(onRequest = { permissionLauncher.launch(mediaPermissions) })
         screen == Screen.Trash -> TrashScreen(
             trash = state.trash,
@@ -167,12 +217,21 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
             onEmptyTrash = { requestDelete(state.trash) },
             onBack = goHome,
         )
+        screen == Screen.SortQueue -> SortQueueScreen(
+            queue = state.sortQueue,
+            folders = state.folders,
+            onRemove = viewModel::unqueue,
+            onSort = { requestSort(state.sortQueue.map { it.first }) },
+            onBack = goHome,
+        )
         else -> BracketScreen(
             state = state,
             onKeep = viewModel::keep,
             onKeepBoth = viewModel::keepBoth,
             onKeepNeither = viewModel::keepNeither,
+            onTag = viewModel::tag,
             onOpenTrash = { screen = Screen.Trash },
+            onOpenSortQueue = { screen = Screen.SortQueue },
             onOpenSettings = { screen = Screen.Settings },
             onOpenAbout = { screen = Screen.About },
         )

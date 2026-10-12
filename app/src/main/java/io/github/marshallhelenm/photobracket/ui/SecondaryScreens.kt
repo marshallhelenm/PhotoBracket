@@ -1,7 +1,6 @@
 package io.github.marshallhelenm.photobracket.ui
 
 import android.net.Uri
-import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -334,9 +333,7 @@ fun AboutScreen(onBack: () -> Unit) {
 
             Text(stringResource(R.string.about_trash_title), style = MaterialTheme.typography.titleLarge)
             Text(stringResource(R.string.about_trash))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Text(stringResource(R.string.about_trash_system))
-            }
+            Text(stringResource(R.string.about_trash_system))
         }
     }
 }

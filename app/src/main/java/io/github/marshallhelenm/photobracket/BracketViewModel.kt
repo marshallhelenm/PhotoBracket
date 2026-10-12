@@ -66,12 +66,6 @@ class BracketViewModel(application: Application) : AndroidViewModel(application)
     /** Call once photos have been deleted (or trashed by the system) so they're no longer shown. */
     fun onDeleted(uris: List<Uri>) = update { forget(uris.map(ContentUris::parseId)) }
 
-    fun deleteLegacy(uris: List<Uri>) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) { repository.deleteLegacy(uris) }
-            onDeleted(uris)
-        }
-    }
 
     /** Forgets which photos were kept, so they all come up again even with [Settings.includeKept] off. */
     fun forgetKept() {

@@ -20,12 +20,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,9 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import io.github.marshallhelenm.photobracket.ui.theme.textButtonColors
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,9 +69,7 @@ private val mediaPermissions: Array<String> = when {
         Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
     )
     Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
-    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-    // Below Android 11 there's no system delete dialog, so we need write access to delete.
-    else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 }
 
 private fun hasMediaPermission(context: Context): Boolean {
@@ -95,9 +89,8 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
     val context = LocalContext.current
     var hasPermission by remember { mutableStateOf(hasMediaPermission(context)) }
     var screen by rememberSaveable { mutableStateOf(Screen.Bracket) }
-    // Photos waiting on the system delete dialog, or on our own dialog below Android 11.
+    // Photos waiting on the system delete dialog.
     var awaitingSystemDelete by remember { mutableStateOf<List<Uri>>(emptyList()) }
-    var awaitingLegacyConfirm by remember { mutableStateOf<List<Uri>?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -124,14 +117,10 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
 
     fun requestDelete(uris: List<Uri>) {
         if (uris.isEmpty()) return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Trashed items stay recoverable from the gallery app for ~30 days.
-            val request = MediaStore.createTrashRequest(context.contentResolver, uris, true)
-            awaitingSystemDelete = uris
-            deleteLauncher.launch(IntentSenderRequest.Builder(request.intentSender).build())
-        } else {
-            awaitingLegacyConfirm = uris
-        }
+        // Trashed items stay recoverable from the gallery app for ~30 days.
+        val request = MediaStore.createTrashRequest(context.contentResolver, uris, true)
+        awaitingSystemDelete = uris
+        deleteLauncher.launch(IntentSenderRequest.Builder(request.intentSender).build())
     }
 
     LaunchedEffect(hasPermission) {
@@ -189,24 +178,6 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
         )
     }
 
-    awaitingLegacyConfirm?.let { uris ->
-        AlertDialog(
-            onDismissRequest = { awaitingLegacyConfirm = null },
-            title = { Text(stringResource(R.string.confirm_delete_title)) },
-            text = { Text(pluralStringResource(R.plurals.confirm_delete_message, uris.size, uris.size)) },
-            confirmButton = {
-                TextButton(colors = textButtonColors(), onClick = {
-                    awaitingLegacyConfirm = null
-                    viewModel.deleteLegacy(uris)
-                }) { Text(stringResource(R.string.delete)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { awaitingLegacyConfirm = null }, colors = textButtonColors()) {
-                    Text(stringResource(R.string.cancel))
-                }
-            },
-        )
-    }
 }
 
 @Composable

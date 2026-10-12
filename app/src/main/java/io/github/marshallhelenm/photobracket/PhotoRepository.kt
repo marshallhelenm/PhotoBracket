@@ -24,11 +24,4 @@ class PhotoRepository(private val context: Context) {
 
     fun uriFor(id: Long): Uri =
         ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-    /** Deletes directly. Only usable on Android 10 and below (legacy storage + WRITE_EXTERNAL_STORAGE). */
-    fun deleteLegacy(uris: List<Uri>) {
-        uris.forEach { uri ->
-            runCatching { context.contentResolver.delete(uri, null, null) }
-        }
-    }
 }

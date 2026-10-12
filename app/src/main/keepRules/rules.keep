@@ -10,3 +10,9 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# Room 2.6.1 (pulled in by WorkManager) keeps RoomDatabase subclasses but not their constructors,
+# which R8 full mode then strips; WorkManager creates WorkDatabase_Impl reflectively at startup.
+-keep class * extends androidx.room.RoomDatabase {
+    <init>();
+}

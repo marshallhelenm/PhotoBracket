@@ -90,14 +90,12 @@ object DailyReminder {
 
     internal fun show(context: Context) {
         if (!canNotify(context)) return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                context.getString(R.string.reminder_channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT,
-            )
-            context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            context.getString(R.string.reminder_channel_name),
+            NotificationManager.IMPORTANCE_DEFAULT,
+        )
+        context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         val openApp = PendingIntent.getActivity(
             context,
             0,

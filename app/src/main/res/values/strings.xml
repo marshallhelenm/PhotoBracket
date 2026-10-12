@@ -20,13 +20,7 @@
     <string name="restore">Restore</string>
     <string name="restore_all">Restore all</string>
     <string name="empty_trash">Empty trash</string>
-    <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
-    <string name="confirm_delete_title">Delete photos?</string>
-    <plurals name="confirm_delete_message">
-        <item quantity="one">%d photo will be permanently deleted from this device.</item>
-        <item quantity="other">%d photos will be permanently deleted from this device.</item>
-    </plurals>
 
     <!-- Settings -->
     <string name="setting_include_kept">Show kept photos again</string>
@@ -59,7 +53,7 @@
     <string name="about_how">PhotoBracket shows you two random photos from your library and asks one question: which one do you want to keep? Tap \"Keep this one\" under your favorite and the other goes to the trash. If you can\'t choose, keep both. If neither is worth it, keep neither.\n\nTap a photo to see it full size. Swipe or tap to flip between the two, and pinch to zoom in.\n\nOnce a day, PhotoBracket will send you a notification at a random time as a nudge to judge a pair. In Settings you can pick a set time instead, or turn the reminder off.</string>
     <string name="about_trash_title">About the trash</string>
     <string name="about_trash">Nothing is deleted right away. Photos you pass on go into PhotoBracket\'s own trash, where you can look them over and restore any you change your mind about. They stay on your phone until you empty the trash. Android then asks you to confirm before anything is removed.\n\nIf you\'d rather skip the app\'s trash, turn on \"Delete right away\" in Settings. Android will then ask you about each photo as soon as you pass on it.</string>
-    <string name="about_trash_system">On Android 11 and newer, deleted photos go to your phone\'s own trash, where they can usually be recovered for about 30 days.</string>
+    <string name="about_trash_system">Deleted photos go to your phone\'s own trash, where they can usually be recovered for about 30 days.</string>
 
     <!-- Permissions -->
     <string name="permission_needed">PhotoBracket needs access to your photos to show you pairs to choose between.</string>

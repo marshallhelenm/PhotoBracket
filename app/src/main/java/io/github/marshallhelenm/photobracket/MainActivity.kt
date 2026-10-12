@@ -207,6 +207,7 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
             folders = state.libraryFolders,
             excluded = state.settings.excludedFolders,
             onExcludedChange = viewModel::setFolderExcluded,
+            onAllExcludedChange = viewModel::setAllFoldersExcluded,
             onBack = { screen = Screen.Settings },
         )
         !hasPermission -> PermissionPrompt(onRequest = { permissionLauncher.launch(mediaPermissions) })

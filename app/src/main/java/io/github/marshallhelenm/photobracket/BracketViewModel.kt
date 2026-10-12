@@ -112,6 +112,12 @@ class BracketViewModel(application: Application) : AndroidViewModel(application)
         updateSettings(settings.copy(excludedFolders = folders))
     }
 
+    /** Leaves out every folder on the phone, or brings them all back. */
+    fun setAllFoldersExcluded(excluded: Boolean) {
+        val folders = if (excluded) libraryFolders.map { it.relativePath }.toSet() else emptySet()
+        updateSettings(settings.copy(excludedFolders = folders))
+    }
+
     fun setSortingEnabled(enabled: Boolean) {
         if (enabled) setFolders(folderStore.seedSuggestionsOnce())
         updateSettings(settings.copy(sortingEnabled = enabled))

@@ -31,8 +31,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.filled.Check
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import io.github.marshallhelenm.photobracket.PhotoRepository
@@ -240,31 +238,12 @@ private fun PhotoMenu(uri: Uri, tagging: FolderTagging?, modifier: Modifier = Mo
             }
         }
         if (tagging != null) {
-            val current = tagging.folderFor(uri)
-            DropdownMenu(expanded = choosingFolder, onDismissRequest = { choosingFolder = false }) {
-                tagging.folders.forEach { folder ->
-                    DropdownMenuItem(
-                        leadingIcon = { Text(folder.emoji, fontSize = 20.sp) },
-                        text = { Text(folder.name) },
-                        trailingIcon = {
-                            if (folder.id == current?.id) Icon(Icons.Filled.Check, contentDescription = null)
-                        },
-                        onClick = {
-                            choosingFolder = false
-                            tagging.toggle(uri, folder)
-                        },
-                    )
-                }
-                if (current != null) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.dont_sort)) },
-                        onClick = {
-                            choosingFolder = false
-                            tagging.clear(uri)
-                        },
-                    )
-                }
-            }
+            FolderMenu(
+                uri = uri,
+                tagging = tagging,
+                expanded = choosingFolder,
+                onDismiss = { choosingFolder = false },
+            )
         }
     }
 }

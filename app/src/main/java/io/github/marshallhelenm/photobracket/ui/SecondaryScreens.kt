@@ -393,8 +393,11 @@ fun PhotoFoldersScreen(
     folders: List<LibraryFolder>,
     excluded: Set<String>,
     onExcludedChange: (relativePath: String, excluded: Boolean) -> Unit,
+    onAllExcludedChange: (excluded: Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
+    val includedCount = folders.count { it.relativePath !in excluded }
+    val allIncluded = includedCount == folders.size
     SubScreen(title = stringResource(R.string.photo_folders), onBack = onBack) { innerPadding ->
         LazyColumn(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             item {
@@ -404,6 +407,25 @@ fun PhotoFoldersScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
+            }
+            if (folders.isNotEmpty()) {
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.photo_folders_all)) },
+                        supportingContent = {
+                            Text(stringResource(R.string.photo_folders_included_count, includedCount, folders.size))
+                        },
+                        trailingContent = {
+                            Switch(checked = allIncluded, onCheckedChange = { onAllExcludedChange(!it) })
+                        },
+                        modifier = Modifier.toggleable(
+                            value = allIncluded,
+                            role = Role.Switch,
+                            onValueChange = { onAllExcludedChange(!it) },
+                        ),
+                    )
+                    HorizontalDivider()
+                }
             }
             items(folders, key = { it.relativePath }) { folder ->
                 val included = folder.relativePath !in excluded

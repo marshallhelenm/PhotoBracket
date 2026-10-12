@@ -70,6 +70,8 @@
     <string name="photo_folders">Photo folders</string>
     <string name="photo_folders_hint">Turn off folders you don\'t want photos picked from, like screenshots or ones you\'ve already sorted. Photos already in the trash or waiting to be sorted stay there.</string>
     <string name="photo_folders_root">Top level</string>
+    <string name="photo_folders_all">All folders</string>
+    <string name="photo_folders_included_count">%1$d of %2$d folders included</string>
     <plurals name="photo_count">
         <item quantity="one">%d photo</item>
         <item quantity="other">%d photos</item>
@@ -77,7 +79,7 @@
 
     <!-- Folders -->
     <string name="folders">Folders</string>
-    <string name="folders_hint">Star up to %1$d folders to show them beside each photo. The rest are under \"Sort into…\" in the full-size view. Deleting a folder here doesn\'t touch any photos.</string>
+    <string name="folders_hint">Star up to %1$d folders to show them beside each photo. The rest are under the ••• button beside each photo, and \"Sort into…\" in the full-size view. Deleting a folder here doesn\'t touch any photos.</string>
     <string name="add_folder">Add folder</string>
     <string name="edit_folder">Edit folder</string>
     <string name="delete_folder">Delete folder</string>
@@ -114,7 +116,7 @@
     <string name="about_how_title">How it works</string>
     <string name="about_how">PhotoBracket shows you two random photos from your library and asks one question: which one do you want to keep? Tap \"Keep this one\" under your favorite and the other goes to the trash. If you can\'t choose, keep both. If neither is worth it, keep neither.\n\nTap a photo to see it full size. Swipe or tap to flip between the two, and pinch to zoom in.\n\nOnce a day, PhotoBracket will send you a notification at a random time as a nudge to judge a pair. In Settings you can pick a set time instead, or turn the reminder off.</string>
     <string name="about_folders_title">Sorting into folders</string>
-    <string name="about_folders">Turn on \"Sort into folders\" in Settings to tag photos as you go. Tap an emoji beside a photo to choose its folder; other folders are under \"Sort into…\" in the full-size view. A tag only counts if you keep the photo.\n\nKept photos wait under the folder icon until you sort them. Android asks once to confirm, then they\'re moved to Pictures/&lt;folder name&gt; on your phone.</string>
+    <string name="about_folders">Turn on \"Sort into folders\" in Settings to tag photos as you go. Tap an emoji beside a photo to choose its folder; other folders are under the ••• button below them, or \"Sort into…\" in the full-size view. A tag only counts if you keep the photo.\n\nKept photos wait under the folder icon until you sort them. Android asks once to confirm, then they\'re moved to Pictures/&lt;folder name&gt; on your phone.</string>
     <string name="about_trash_title">About the trash</string>
     <string name="about_trash">Nothing is deleted right away. Photos you pass on go into PhotoBracket\'s own trash, where you can look them over and restore any you change your mind about. They stay on your phone until you empty the trash. Android then asks you to confirm before anything is removed.\n\nIf you\'d rather skip the app\'s trash, turn on \"Delete right away\" in Settings. Android will then ask you about each photo as soon as you pass on it.</string>
     <string name="about_trash_system">Deleted photos go to your phone\'s own trash, where they can usually be recovered for about 30 days.</string>

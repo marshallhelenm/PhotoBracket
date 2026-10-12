@@ -228,7 +228,7 @@ private fun PhotoOption(
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize().clickable(onClick = onView),
             )
-            if (tagging != null && tagging.starred.isNotEmpty()) {
+            if (tagging != null && tagging.folders.isNotEmpty()) {
                 FolderColumn(
                     uri = uri,
                     tagging = tagging,

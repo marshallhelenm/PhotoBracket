@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +46,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.draw.rotate
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -86,26 +92,91 @@ class FolderTagging(
 @Composable
 fun FolderColumn(uri: Uri, tagging: FolderTagging, modifier: Modifier = Modifier) {
     val selected = tagging.folderFor(uri)
+    var showingAll by remember { mutableStateOf(false) }
     Column(
         modifier = modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         tagging.starred.forEach { folder ->
-            val isSelected = folder.id == selected?.id
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.35f))
-                    .then(
-                        if (isSelected) Modifier.border(2.dp, Color.White, CircleShape) else Modifier,
-                    )
-                    .selectable(selected = isSelected, role = Role.Checkbox) { tagging.toggle(uri, folder) }
-                    .semantics { contentDescription = folder.name },
+            FolderChip(
+                selected = folder.id == selected?.id,
+                label = folder.name,
+                onClick = { tagging.toggle(uri, folder) },
             ) {
                 Text(folder.emoji, fontSize = 20.sp)
             }
+        }
+        // "More" opens every folder. If the photo's folder isn't starred, show it here so the tag is visible.
+        val unstarredSelection = selected?.takeUnless { it.starred }
+        Box {
+            FolderChip(
+                selected = unstarredSelection != null,
+                label = unstarredSelection?.name ?: stringResource(R.string.sort_into),
+                onClick = { showingAll = true },
+            ) {
+                if (unstarredSelection != null) {
+                    Text(unstarredSelection.emoji, fontSize = 20.sp)
+                } else {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.rotate(90f),
+                    )
+                }
+            }
+            FolderMenu(uri = uri, tagging = tagging, expanded = showingAll, onDismiss = { showingAll = false })
+        }
+    }
+}
+
+@Composable
+private fun FolderChip(
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(if (selected) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.35f))
+            .then(if (selected) Modifier.border(2.dp, Color.White, CircleShape) else Modifier)
+            .selectable(selected = selected, role = Role.Checkbox, onClick = onClick)
+            .semantics { contentDescription = label },
+    ) {
+        content()
+    }
+}
+
+/** Dropdown of every folder, used from the main screen's "more" chip and the viewer's "Sort into…". */
+@Composable
+fun FolderMenu(uri: Uri, tagging: FolderTagging, expanded: Boolean, onDismiss: () -> Unit) {
+    val current = tagging.folderFor(uri)
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        tagging.folders.forEach { folder ->
+            DropdownMenuItem(
+                leadingIcon = { Text(folder.emoji, fontSize = 20.sp) },
+                text = { Text(folder.name) },
+                trailingIcon = {
+                    if (folder.id == current?.id) Icon(Icons.Filled.Check, contentDescription = null)
+                },
+                onClick = {
+                    onDismiss()
+                    tagging.toggle(uri, folder)
+                },
+            )
+        }
+        if (current != null) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.dont_sort)) },
+                onClick = {
+                    onDismiss()
+                    tagging.clear(uri)
+                },
+            )
         }
     }
 }
@@ -157,7 +228,11 @@ fun FoldersScreen(
                             enabled = canStar,
                         ) {
                             Icon(
-                                imageVector = if (folder.starred) Icons.Filled.Star else Icons.Outlined.Star,
+                                painter = if (folder.starred) {
+                                    rememberVectorPainter(Icons.Filled.Star)
+                                } else {
+                                    painterResource(R.drawable.ic_star_border)
+                                },
                                 contentDescription = stringResource(
                                     if (folder.starred) R.string.unstar_folder else R.string.star_folder,
                                 ),

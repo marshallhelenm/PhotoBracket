@@ -230,6 +230,7 @@ fun PhotoBracketApp(viewModel: BracketViewModel = viewModel()) {
             onKeep = viewModel::keep,
             onKeepBoth = viewModel::keepBoth,
             onKeepNeither = viewModel::keepNeither,
+            onUndo = viewModel::undo,
             onTag = viewModel::tag,
             onOpenTrash = { screen = Screen.Trash },
             onOpenSortQueue = { screen = Screen.SortQueue },

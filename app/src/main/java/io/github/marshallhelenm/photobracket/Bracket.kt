@@ -14,6 +14,8 @@ import kotlin.random.Random
  *
  * Photos in [excluded] (from folders the user left out) never come up in matchups, but any trash,
  * kept, or sort decisions already made about them still stand.
+ *
+ * Each decision is recorded so [undo] can bring its pair back exactly as it was.
  */
 class Bracket(
     ids: Collection<Long>,
@@ -36,6 +38,14 @@ class Bracket(
     // Tags on the current pair, applied when they're kept. A null value clears a queued folder.
     private val pendingTags = mutableMapOf<Long, String?>()
 
+    // A decision only ever changes the two photos in its pair, so that's all undo needs to remember.
+    private data class PhotoBefore(val id: Long, val kept: Boolean, val queuedFolder: String?)
+    private data class Decision(val pair: Pair<Long, Long>, val tags: Map<Long, String?>, val before: List<PhotoBefore>)
+
+    private val history = ArrayDeque<Decision>()
+
+    val canUndo: Boolean get() = history.isNotEmpty()
+
     val trashed: Set<Long> get() = trash
     val kept: Set<Long> get() = keptSet
     val sortQueue: Map<Long, String> get() = queue
@@ -50,6 +60,7 @@ class Bracket(
     fun keep(winner: Long) {
         val (first, second) = current ?: return
         require(winner == first || winner == second) { "$winner is not in the current pair" }
+        record()
         discard(if (winner == first) second else first)
         markKept(winner)
         commitTag(winner)
@@ -58,6 +69,7 @@ class Bracket(
 
     fun keepBoth() {
         val (first, second) = current ?: return
+        record()
         markKept(first)
         markKept(second)
         commitTag(first)
@@ -67,9 +79,24 @@ class Bracket(
 
     fun keepNeither() {
         val (first, second) = current ?: return
+        record()
         discard(first)
         discard(second)
         advance()
+    }
+
+    /** Brings back the previous pair, undoing everything its decision did. */
+    fun undo() {
+        val decision = history.removeLastOrNull() ?: return
+        decision.before.forEach { photo ->
+            trash.remove(photo.id)
+            if (photo.kept) keptSet.add(photo.id) else keptSet.remove(photo.id)
+            if (photo.queuedFolder != null) queue[photo.id] = photo.queuedFolder else queue.remove(photo.id)
+            if (photo.id !in pool) pool.add(photo.id)
+        }
+        pendingTags.clear()
+        pendingTags.putAll(decision.tags)
+        current = decision.pair
     }
 
     /** The folder [id] will be sorted into if kept: its tag in this pair, or what's already queued. */
@@ -95,6 +122,14 @@ class Bracket(
     fun forgetFolder(folderId: String) {
         queue.values.removeAll { it == folderId }
         pendingTags.entries.removeAll { it.value == folderId }
+        val scrubbed = history.map { decision ->
+            decision.copy(
+                tags = decision.tags.filterValues { it != folderId },
+                before = decision.before.map { if (it.queuedFolder == folderId) it.copy(queuedFolder = null) else it },
+            )
+        }
+        history.clear()
+        history.addAll(scrubbed)
     }
 
     fun restore(id: Long) {
@@ -113,8 +148,22 @@ class Bracket(
         keptSet.removeAll(ids.toSet())
         queue.keys.removeAll(ids.toSet())
         pool.removeAll(ids.toSet())
+        // Deleted photos can't come back, so neither can decisions about them.
+        history.removeAll { it.pair.first in ids || it.pair.second in ids }
         val pair = current
         if (pair == null || pair.first in ids || pair.second in ids) advance()
+    }
+
+    private fun record() {
+        val pair = current ?: return
+        history.addLast(
+            Decision(
+                pair = pair,
+                tags = pendingTags.toMap(),
+                before = pair.toList().map { PhotoBefore(it, kept = it in keptSet, queuedFolder = queue[it]) },
+            ),
+        )
+        if (history.size > MAX_UNDO) history.removeFirst()
     }
 
     private fun discard(id: Long) {
@@ -148,3 +197,5 @@ class Bracket(
         current = pool[i] to pool[j]
     }
 }
+
+private const val MAX_UNDO = 50

@@ -5,6 +5,7 @@
     <string name="keep_this">Keep this one</string>
     <string name="keep_both">Keep both</string>
     <string name="keep_neither">Keep neither</string>
+    <string name="undo">Undo</string>
     <string name="photo_description">Photo option %1$d</string>
     <string name="not_enough_photos">Not enough photos left to compare.</string>
     <string name="kept_hidden_hint">Photos you\'ve kept are hidden. You can bring them back in Settings.</string>

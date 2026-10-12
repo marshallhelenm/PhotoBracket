@@ -62,6 +62,7 @@ fun BracketScreen(
     onKeep: (Uri) -> Unit,
     onKeepBoth: () -> Unit,
     onKeepNeither: () -> Unit,
+    onUndo: () -> Unit,
     onTag: (Uri, String?) -> Unit,
     onOpenTrash: () -> Unit,
     onOpenSortQueue: () -> Unit,
@@ -121,6 +122,11 @@ fun BracketScreen(
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
+                        if (state.canUndo) {
+                            TextButton(onClick = onUndo, colors = textButtonColors()) {
+                                Text(stringResource(R.string.undo))
+                            }
+                        }
                     }
                 }
                 else -> {
@@ -134,6 +140,9 @@ fun BracketScreen(
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                         horizontalArrangement = Arrangement.Center,
                     ) {
+                        TextButton(onClick = onUndo, enabled = state.canUndo, colors = textButtonColors()) {
+                            Text(stringResource(R.string.undo))
+                        }
                         TextButton(onClick = onKeepBoth, colors = textButtonColors()) { Text(stringResource(R.string.keep_both)) }
                         TextButton(onClick = onKeepNeither, colors = textButtonColors()) { Text(stringResource(R.string.keep_neither)) }
                     }
@@ -268,6 +277,7 @@ private fun BracketScreenPreview() {
             onKeep = {},
             onKeepBoth = {},
             onKeepNeither = {},
+            onUndo = {},
             onTag = { _, _ -> },
             onOpenTrash = {},
             onOpenSortQueue = {},

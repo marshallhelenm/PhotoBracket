@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 data class BracketUiState(
     val isLoading: Boolean = true,
     val pair: Pair<Uri, Uri>? = null,
+    val canUndo: Boolean = false,
     val trash: List<Uri> = emptyList(),
     val keptCount: Int = 0,
     val settings: Settings = Settings(),
@@ -77,6 +78,8 @@ class BracketViewModel(application: Application) : AndroidViewModel(application)
     fun keepBoth() = decide { keepBoth() }
 
     fun keepNeither() = decide { keepNeither() }
+
+    fun undo() = update { undo() }
 
     fun restore(uri: Uri) = update { restore(ContentUris.parseId(uri)) }
 
@@ -223,6 +226,7 @@ class BracketViewModel(application: Application) : AndroidViewModel(application)
         uiState = BracketUiState(
             isLoading = false,
             pair = pair?.let { (a, b) -> repository.uriFor(a) to repository.uriFor(b) },
+            canUndo = bracket.canUndo,
             trash = bracket.trashed.map(repository::uriFor),
             keptCount = bracket.kept.size,
             settings = settings,

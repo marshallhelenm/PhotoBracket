@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -73,10 +74,16 @@ fun BracketScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onOpenTrash) {
-                        BadgedBox(badge = {
-                            if (state.trash.isNotEmpty()) Badge { Text(state.trash.size.toString()) }
-                        }) {
+                    // Badge wraps the button rather than the icon: IconButton clips its content,
+                    // which cut off the count. The offset pulls the badge back onto the icon.
+                    BadgedBox(badge = {
+                        if (state.trash.isNotEmpty()) {
+                            Badge(modifier = Modifier.offset(x = (-10).dp, y = 10.dp)) {
+                                Text(state.trash.size.toString())
+                            }
+                        }
+                    }) {
+                        IconButton(onClick = onOpenTrash) {
                             Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.trash))
                         }
                     }

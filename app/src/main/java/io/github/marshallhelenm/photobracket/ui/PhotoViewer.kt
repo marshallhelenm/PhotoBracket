@@ -31,6 +31,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import io.github.marshallhelenm.photobracket.PhotoRepository
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -107,6 +114,10 @@ fun PhotoViewer(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.align(Alignment.Center).padding(vertical = 12.dp),
                 )
+                PhotoMenu(
+                    uri = photos[pagerState.currentPage],
+                    modifier = Modifier.align(Alignment.TopEnd),
+                )
             }
             Button(
                 onClick = {
@@ -175,4 +186,43 @@ private fun ZoomableImage(
                 translationY = offset.y
             },
     )
+}
+
+@Composable
+private fun PhotoMenu(uri: Uri, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        IconButton(onClick = { expanded = true }) {
+            Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.more_options), tint = Color.White)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.copy)) },
+                onClick = {
+                    expanded = false
+                    PhotoActions.copy(context, uri)
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.share)) },
+                onClick = {
+                    expanded = false
+                    PhotoActions.share(context, uri)
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.show_in_folder)) },
+                onClick = {
+                    expanded = false
+                    scope.launch {
+                        val folder = withContext(Dispatchers.IO) { PhotoRepository(context).folderOf(uri) }
+                        PhotoActions.showInFolder(context, folder)
+                    }
+                },
+            )
+        }
+    }
 }

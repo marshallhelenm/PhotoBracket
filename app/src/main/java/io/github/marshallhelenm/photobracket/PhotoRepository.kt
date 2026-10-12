@@ -24,4 +24,21 @@ class PhotoRepository(private val context: Context) {
 
     fun uriFor(id: Long): Uri =
         ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+
+    /** Where a photo lives on disk, e.g. volume "external_primary", path "Pictures/Cats/". */
+    fun folderOf(uri: Uri): PhotoFolder? =
+        context.contentResolver.query(
+            uri,
+            arrayOf(MediaStore.MediaColumns.VOLUME_NAME, MediaStore.MediaColumns.RELATIVE_PATH),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            if (!cursor.moveToFirst()) return@use null
+            val volume = cursor.getString(0) ?: return@use null
+            val path = cursor.getString(1) ?: return@use null
+            PhotoFolder(volume, path)
+        }
 }
+
+data class PhotoFolder(val volume: String, val relativePath: String)

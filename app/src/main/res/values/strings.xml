@@ -1,0 +1,67 @@
+<resources>
+    <string name="app_name">PhotoBracket</string>
+
+    <!-- Main screen -->
+    <string name="keep_this">Keep this one</string>
+    <string name="keep_both">Keep both</string>
+    <string name="keep_neither">Keep neither</string>
+    <string name="photo_description">Photo option %1$d</string>
+    <string name="not_enough_photos">Not enough photos left to compare.</string>
+    <string name="kept_hidden_hint">Photos you\'ve kept are hidden. You can bring them back in Settings.</string>
+    <string name="trash">Trash</string>
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+    <string name="photo_position">%1$d of %2$d</string>
+
+    <!-- Trash -->
+    <string name="trash_empty">The trash is empty.</string>
+    <string name="restore">Restore</string>
+    <string name="restore_all">Restore all</string>
+    <string name="empty_trash">Empty trash</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm_delete_title">Delete photos?</string>
+    <plurals name="confirm_delete_message">
+        <item quantity="one">%d photo will be permanently deleted from this device.</item>
+        <item quantity="other">%d photos will be permanently deleted from this device.</item>
+    </plurals>
+
+    <!-- Settings -->
+    <string name="setting_include_kept">Show kept photos again</string>
+    <string name="setting_include_kept_summary">Photos you\'ve chosen to keep can come up again in later matchups.</string>
+    <string name="setting_delete_immediately">Delete right away</string>
+    <string name="setting_delete_immediately_summary">Have Android ask you to delete photos as soon as you pass on them, instead of collecting them in PhotoBracket\'s trash.</string>
+    <string name="setting_forget_kept">Forget kept photos</string>
+    <plurals name="setting_forget_kept_summary">
+        <item quantity="one">%d photo is remembered as kept.</item>
+        <item quantity="other">%d photos are remembered as kept.</item>
+    </plurals>
+    <string name="reset">Reset</string>
+    <string name="setting_reminder">Daily reminder</string>
+    <string name="setting_reminder_summary">Get a notification once a day to judge a pair.</string>
+    <string name="setting_reminder_blocked">Notifications are turned off for PhotoBracket. Allow them to get reminders.</string>
+    <string name="setting_reminder_fixed">At a set time</string>
+    <string name="setting_reminder_random">At a random time</string>
+    <string name="setting_reminder_random_summary">Sometime between 9 AM and 9 PM</string>
+    <string name="ok">OK</string>
+
+    <!-- Reminder notification -->
+    <string name="reminder_channel_name">Daily reminder</string>
+    <string name="reminder_title">Time for a matchup</string>
+    <string name="reminder_text">Two photos are waiting. Which one stays?</string>
+
+    <!-- About -->
+    <string name="about_tagline">Thin out your photo library, one matchup at a time.</string>
+    <string name="about_why">PhotoBracket exists because I have approximately 5 Ga-Jillion photos of my cats. When you have forty nearly identical shots of the same nap, picking a favorite is easy. Deleting the rest is the hard part.</string>
+    <string name="about_how_title">How it works</string>
+    <string name="about_how">PhotoBracket shows you two random photos from your library and asks one question: which one do you want to keep? Tap \"Keep this one\" under your favorite and the other goes to the trash. If you can\'t choose, keep both. If neither is worth it, keep neither.\n\nTap a photo to see it full size. Swipe or tap to flip between the two, and pinch to zoom in.\n\nOnce a day, PhotoBracket will send you a notification at a random time as a nudge to judge a pair. In Settings you can pick a set time instead, or turn the reminder off.</string>
+    <string name="about_trash_title">About the trash</string>
+    <string name="about_trash">Nothing is deleted right away. Photos you pass on go into PhotoBracket\'s own trash, where you can look them over and restore any you change your mind about. They stay on your phone until you empty the trash. Android then asks you to confirm before anything is removed.\n\nIf you\'d rather skip the app\'s trash, turn on \"Delete right away\" in Settings. Android will then ask you about each photo as soon as you pass on it.</string>
+    <string name="about_trash_system">On Android 11 and newer, deleted photos go to your phone\'s own trash, where they can usually be recovered for about 30 days.</string>
+
+    <!-- Permissions -->
+    <string name="permission_needed">PhotoBracket needs access to your photos to show you pairs to choose between.</string>
+    <string name="grant_access">Grant access</string>
+</resources>
